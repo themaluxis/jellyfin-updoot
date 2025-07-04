@@ -28,6 +28,24 @@ the ability to run python as a command in your setup (no i dont own every system
 
 nginx (other reverse proxies may work but again im not using these so wont be 100% on those)
 
+a manual method injection script from either manually putting one in or having one of my other mods installed (pause screen, media bar etc) if you dont have it you wont get it to work because it wont log you into the backend you can add this to manually inject the credentials if you dont have one just add before the </body> tag
+
+```
+<script>const saveJellyfinCredentials = (serverId, accessToken) => {
+    const credentials = {
+        Servers: [{ Id: serverId, AccessToken: accessToken }],
+    };
+
+    try {
+        localStorage.setItem("jellyfin_credentials", JSON.stringify(credentials));
+        console.log("Jellyfin credentials saved successfully.");
+    } catch (e) {
+        console.error("Error saving Jellyfin credentials", e);
+    }
+};</script>
+```
+if you already use one of my mods or have the plugin version of the media bar installed they already have this method
+
 ## installation:
 
 download the files in the repo `updoot.js` and `backendupdoot.py` 
