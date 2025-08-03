@@ -6,10 +6,10 @@ import requests
 
 app = Flask(__name__)
 # CONFIGURATION SECTION
-DATABASE = './recommendations.db'  # leave this alone or select a dir you have read write access too
+DATABASE = '/config/recommendations.db'  # leave this alone or select a dir you have read write access too
 JELLYFIN_URL = 'https://YOURDOMAINNAMEHERE' # Replace with your domain name
 JELLYFIN_API_KEY = 'JELLYFINAPIKEYHERE'  # Replace with actual Jellyfin API key from the admin pannel api keys generate and copy that key here.
-ADMIN_USER_IDS = ['88a888888aa88a88a8aa888aa8a8a8a8', 'USERID2']  # Replace with actual admin user IDs that you want to have admin control of the comments and updoots to get these go to the admin pannel and edit that user the userid is going to be in the url for that page of the user.
+ADMIN_USER_IDS = ['USERID2']  # Replace with actual admin user IDs that you want to have admin control of the comments and updoots to get these go to the admin pannel and edit that user the userid is going to be in the url for that page of the user.
 
 logging.basicConfig(
     level=logging.DEBUG,

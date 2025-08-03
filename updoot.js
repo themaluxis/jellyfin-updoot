@@ -26,10 +26,299 @@
         let overlay = null;
         let adminOverlay = null;
 
+        // Injecter les styles CSS améliorés
+        if (!document.querySelector('#updoot-styles')) {
+            const style = document.createElement('style');
+            style.id = 'updoot-styles';
+            style.textContent = `
+                /* Style pour l'overlay des recommandations */
+                .updoot-overlay {
+                    position: fixed !important;
+                    top: 0 !important;
+                    left: 0 !important;
+                    width: 100% !important;
+                    height: 100% !important;
+                    background: rgba(0, 0, 0, 0.95) !important;
+                    z-index: 9999 !important;
+                    overflow-y: auto !important;
+                    padding: 40px 20px !important;
+                    box-sizing: border-box !important;
+                }
+
+                .updoot-container {
+                    max-width: 1400px;
+                    margin: 0 auto;
+                    padding: 20px;
+                }
+
+                .updoot-header {
+                    text-align: center;
+                    margin-bottom: 40px;
+                    color: white;
+                }
+
+                .updoot-header h1 {
+                    font-size: 2.5rem;
+                    margin-bottom: 10px;
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    -webkit-background-clip: text;
+                    -webkit-text-fill-color: transparent;
+                    background-clip: text;
+                }
+
+                .updoot-stats {
+                    display: flex;
+                    justify-content: center;
+                    gap: 40px;
+                    margin-bottom: 30px;
+                    color: white;
+                }
+
+                .updoot-stat-item {
+                    text-align: center;
+                }
+
+                .updoot-stat-number {
+                    font-size: 2rem;
+                    font-weight: bold;
+                    color: #667eea;
+                }
+
+                .updoot-stat-label {
+                    font-size: 0.9rem;
+                    opacity: 0.8;
+                }
+
+                .updoot-close-btn {
+                    position: fixed !important;
+                    top: 20px !important;
+                    right: 20px !important;
+                    background: #ff4444 !important;
+                    color: white !important;
+                    border: none !important;
+                    border-radius: 50% !important;
+                    width: 50px !important;
+                    height: 50px !important;
+                    display: flex !important;
+                    align-items: center !important;
+                    justify-content: center !important;
+                    cursor: pointer !important;
+                    font-size: 24px !important;
+                    z-index: 10000 !important;
+                    transition: all 0.3s ease !important;
+                }
+
+                .updoot-close-btn:hover {
+                    background: #ff6666 !important;
+                    transform: scale(1.1) !important;
+                }
+
+                .updoot-grid {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+                    gap: 25px;
+                    padding: 20px 0;
+                }
+
+                @media (min-width: 768px) {
+                    .updoot-grid {
+                        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+                    }
+                }
+
+                @media (min-width: 1200px) {
+                    .updoot-grid {
+                        grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+                    }
+                }
+
+                .updoot-card {
+                    background: linear-gradient(135deg, #1a1f2e 0%, #2a3441 100%);
+                    border-radius: 12px;
+                    overflow: hidden;
+                    transition: all 0.3s ease;
+                    cursor: pointer;
+                    position: relative;
+                    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+                }
+
+                .updoot-card:hover {
+                    transform: translateY(-8px);
+                    box-shadow: 0 12px 24px rgba(102, 126, 234, 0.4);
+                }
+
+                .updoot-card-image {
+                    width: 100%;
+                    aspect-ratio: 16/9;
+                    object-fit: cover;
+                    background: #2a3441;
+                }
+
+                .updoot-card-content {
+                    padding: 20px;
+                }
+
+                .updoot-card-title {
+                    font-size: 1.4rem;
+                    font-weight: 600;
+                    margin-bottom: 10px;
+                    color: white;
+                    display: -webkit-box;
+                    -webkit-line-clamp: 2;
+                    -webkit-box-orient: vertical;
+                    overflow: hidden;
+                }
+
+                .updoot-card-meta {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 15px;
+                }
+
+                .updoot-vote-count {
+                    background: #667eea;
+                    color: white;
+                    padding: 6px 16px;
+                    border-radius: 20px;
+                    font-weight: bold;
+                    font-size: 0.9rem;
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                }
+
+                .updoot-card-type {
+                    color: #9ca3af;
+                    font-size: 0.85rem;
+                    text-transform: uppercase;
+                    letter-spacing: 0.05em;
+                }
+
+                .updoot-card-overview {
+                    font-size: 0.9rem;
+                    line-height: 1.6;
+                    color: #d1d5db;
+                    margin-bottom: 15px;
+                    display: -webkit-box;
+                    -webkit-line-clamp: 3;
+                    -webkit-box-orient: vertical;
+                    overflow: hidden;
+                }
+
+                .updoot-users-list {
+                    border-top: 1px solid rgba(255, 255, 255, 0.1);
+                    padding-top: 15px;
+                }
+
+                .updoot-users-title {
+                    font-size: 0.85rem;
+                    color: #9ca3af;
+                    margin-bottom: 10px;
+                }
+
+                .updoot-user-chips {
+                    display: flex;
+                    flex-wrap: wrap;
+                    gap: 8px;
+                }
+
+                .updoot-user-chip {
+                    background: rgba(102, 126, 234, 0.2);
+                    border: 1px solid rgba(102, 126, 234, 0.4);
+                    padding: 4px 12px;
+                    border-radius: 16px;
+                    font-size: 0.85rem;
+                    color: #e0e7ff;
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                }
+
+                .updoot-user-avatar {
+                    width: 20px;
+                    height: 20px;
+                    border-radius: 50%;
+                    background: #667eea;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 0.7rem;
+                    font-weight: bold;
+                    color: white;
+                }
+
+                .updoot-loading {
+                    text-align: center;
+                    padding: 50px;
+                    color: white;
+                }
+
+                .updoot-loading-spinner {
+                    border: 3px solid rgba(255, 255, 255, 0.1);
+                    border-top-color: #667eea;
+                    border-radius: 50%;
+                    width: 50px;
+                    height: 50px;
+                    animation: updoot-spin 1s linear infinite;
+                    margin: 0 auto 20px;
+                }
+
+                @keyframes updoot-spin {
+                    to { transform: rotate(360deg); }
+                }
+
+                .updoot-no-results {
+                    text-align: center;
+                    padding: 50px;
+                    color: #9ca3af;
+                }
+
+                .updoot-no-results h3 {
+                    font-size: 1.5rem;
+                    margin-bottom: 10px;
+                    color: white;
+                }
+
+                /* Style pour la zone de recommandation sur la page détail */
+                .recommendationArea {
+                    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+                    border-radius: 8px;
+                    padding: 15px 20px !important;
+                    margin: 20px 0 !important;
+                    font-size: 1rem;
+                    color: #e0e7ff;
+                    border: 1px solid rgba(102, 126, 234, 0.3);
+                }
+
+                /* Animation de fade-in pour les cartes */
+                .updoot-card {
+                    animation: updoot-fadeIn 0.5s ease forwards;
+                    opacity: 0;
+                }
+
+                @keyframes updoot-fadeIn {
+                    to {
+                        opacity: 1;
+                    }
+                }
+
+                .updoot-card:nth-child(1) { animation-delay: 0.05s; }
+                .updoot-card:nth-child(2) { animation-delay: 0.1s; }
+                .updoot-card:nth-child(3) { animation-delay: 0.15s; }
+                .updoot-card:nth-child(4) { animation-delay: 0.2s; }
+                .updoot-card:nth-child(5) { animation-delay: 0.25s; }
+                .updoot-card:nth-child(6) { animation-delay: 0.3s; }
+                .updoot-card:nth-child(7) { animation-delay: 0.35s; }
+                .updoot-card:nth-child(8) { animation-delay: 0.4s; }
+            `;
+            document.head.appendChild(style);
+        }
+
         async function fetchItemDetails(itemId) {
             console.log('Fetching item details for itemId:', itemId);
             try {
-                const url = `${serverUrl}/Items/${itemId}?api_key=${apiKey}`; // Fixed typo from original: 'melalui' to 'apiKey'
+                const url = `${serverUrl}/Items/${itemId}?api_key=${apiKey}`;
                 console.log('Requesting:', url);
                 const response = await fetch(url, {
                     method: 'GET',
@@ -91,8 +380,6 @@
 
             const displayArea = document.createElement('div');
             displayArea.className = 'recommendationArea';
-            displayArea.style.marginTop = '10px';
-            displayArea.style.padding = '0 10px';
             const targetContainer = playButton.closest('.mainDetailButtons, .detailButton-container, .detailPagePrimaryContainer');
             if (targetContainer) {
                 targetContainer.appendChild(displayArea);
@@ -434,9 +721,21 @@
                 }
                 const recommendations = await response.json();
                 console.log('Recommendations received:', recommendations);
-                displayArea.textContent = recommendations.length > 0
-                    ? `Recommended by: ${recommendations.map(r => r.username).join(', ')}`
-                    : '';
+                
+                if (recommendations.length > 0) {
+                    const userList = recommendations.map(r => r.username).join(', ');
+                    displayArea.innerHTML = `
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span class="material-icons" style="color: #667eea;">thumb_up</span>
+                            <strong>Recommandé par :</strong> ${userList}
+                            <span style="margin-left: auto; background: #667eea; color: white; padding: 4px 12px; border-radius: 16px; font-size: 0.85rem;">
+                                ${recommendations.length} ${recommendations.length > 1 ? 'votes' : 'vote'}
+                            </span>
+                        </div>
+                    `;
+                } else {
+                    displayArea.innerHTML = '';
+                }
             } catch (error) {
                 console.error('Error fetching recommendations:', error.message);
                 displayArea.textContent = 'Failed to load recommendations: ' + error.message;
@@ -525,7 +824,7 @@
             recommendationsButton.setAttribute('is', 'paper-icon-button-light');
             recommendationsButton.className = 'headerButton btnRecommendations emby-button paper-icon-button-light';
             recommendationsButton.title = 'Recommendations';
-            recommendationsButton.innerHTML = '<span class="material-icons star" aria-hidden="true"></span>'; // Fixed HTML syntax
+            recommendationsButton.innerHTML = '<span class="material-icons star" aria-hidden="true"></span>';
             recommendationsButton.style.backgroundColor = '#00ff0000';
             try {
                 const castWidth = parseFloat(getComputedStyle(castButton).width) || 40;
@@ -612,107 +911,124 @@
 
         async function showRecommendationsOverlay() {
             console.log('Opening recommendations overlay for userId:', userId);
+            
+            // Créer l'overlay avec le nouveau design
             if (!overlay) {
                 console.log('Creating recommendations overlay');
                 overlay = document.createElement('div');
-                overlay.style.cssText = `
-                    display: none;
-                    position: fixed;
-                    top: 5px;
-                    left: 5px;
-                    width: calc(100% - 10px);
-                    height: calc(100% - 10px);
-                    background: rgba(0,0,0,0.8);
-                    z-index: 1000;
-                    color: white;
-                    padding: 20px;
-                    overflow-y: auto;
-                    border: 5px solid #333;
-                    box-sizing: border-box;
-                    display: flex;
-                    flex-wrap: wrap;
-                    gap: 10px;
-                    align-items: flex-start;
-                    justify-content: center;
-                `;
+                overlay.className = 'updoot-overlay';
                 document.body.appendChild(overlay);
+            }
 
-                const closeButton = document.createElement('button');
-                closeButton.innerHTML = '<span class="material-icons">close</span>';
-                closeButton.style.cssText = `
-                    position: absolute;
-                    top: 10px;
-                    right: 10px;
-                    background: #ff4444;
-                    color: white;
-                    border: none;
-                    border-radius: 50%;
-                    width: 30px;
-                    height: 30px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    cursor: pointer;
-                `;
-                closeButton.addEventListener('click', () => {
-                    console.log('Closing recommendations overlay');
+            // Vider et reconstruire le contenu
+            overlay.innerHTML = `
+                <button class="updoot-close-btn">
+                    <span class="material-icons">close</span>
+                </button>
+                <div class="updoot-container">
+                    <div class="updoot-header">
+                        <h1>🎬 Recommandations Jellyfin</h1>
+                    </div>
+                    <div class="updoot-stats" id="updoot-stats">
+                        <div class="updoot-stat-item">
+                            <div class="updoot-stat-number">0</div>
+                            <div class="updoot-stat-label">Total des recommandations</div>
+                        </div>
+                        <div class="updoot-stat-item">
+                            <div class="updoot-stat-number">0</div>
+                            <div class="updoot-stat-label">Médias recommandés</div>
+                        </div>
+                        <div class="updoot-stat-item">
+                            <div class="updoot-stat-number">0</div>
+                            <div class="updoot-stat-label">Utilisateurs actifs</div>
+                        </div>
+                    </div>
+                    <div class="updoot-loading" id="updoot-loading">
+                        <div class="updoot-loading-spinner"></div>
+                        <p>Chargement des recommandations...</p>
+                    </div>
+                    <div class="updoot-grid" id="updoot-grid" style="display: none;"></div>
+                    <div class="updoot-no-results" id="updoot-no-results" style="display: none;">
+                        <h3>Aucune recommandation</h3>
+                        <p>Soyez le premier à recommander du contenu !</p>
+                    </div>
+                </div>
+            `;
+
+            // Ajouter les event listeners
+            const closeBtn = overlay.querySelector('.updoot-close-btn');
+            closeBtn.addEventListener('click', () => {
+                console.log('Closing recommendations overlay');
+                overlay.style.display = 'none';
+            });
+
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) {
+                    console.log('Recommendations overlay clicked outside, closing');
                     overlay.style.display = 'none';
-                });
-                overlay.appendChild(closeButton);
+                }
+            });
 
-                overlay.addEventListener('click', (e) => {
-                    if (e.target === overlay) {
-                        console.log('Recommendations overlay clicked outside, closing');
-                        overlay.style.display = 'none';
-                    }
-                });
-            }
-
-            const closeButton = overlay.querySelector('button');
-            overlay.innerHTML = '';
-            if (closeButton) {
-                overlay.appendChild(closeButton);
-                console.log('Close button reattached to recommendations overlay');
-            }
+            overlay.style.display = 'block';
 
             try {
                 const url = `${backendUrl}/recommendations`;
-                console.log('Fetching all recommendations from:', url, { userId });
+                console.log('Fetching all recommendations from:', url);
                 const response = await fetch(url, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-Emby-Token': apiKey // Added for potential backend auth
+                        'X-Emby-Token': apiKey
                     }
                 });
+                
                 if (!response.ok) {
-                    console.error('Fetch recommendations failed:', `HTTP ${response.status}`, await response.text());
+                    console.error('Fetch recommendations failed:', `HTTP ${response.status}`);
                     throw new Error(`HTTP ${response.status}: ${await response.text()}`);
                 }
+                
                 const recommendations = await response.json();
                 console.log('Recommendations received:', recommendations);
 
+                // Masquer le loading
+                document.getElementById('updoot-loading').style.display = 'none';
+
                 if (!Array.isArray(recommendations) || recommendations.length === 0) {
                     console.log('No recommendations available');
-                    const noRecsMessage = document.createElement('p');
-                    noRecsMessage.textContent = 'No recommendations available yet.';
-                    noRecsMessage.style.cssText = 'width: 100%; text-align: center;';
-                    overlay.appendChild(noRecsMessage);
-                    overlay.style.display = 'flex';
-                    console.log('Recommendations overlay displayed with no recommendations message');
+                    document.getElementById('updoot-no-results').style.display = 'block';
                     return;
                 }
 
+                // Grouper par item
                 const groupedByItem = {};
+                const uniqueUsers = new Set();
+                
                 recommendations.forEach(rec => {
                     if (!groupedByItem[rec.itemId]) {
                         groupedByItem[rec.itemId] = [];
                     }
                     groupedByItem[rec.itemId].push(rec.username);
+                    uniqueUsers.add(rec.userId);
                 });
 
-                for (const itemId in groupedByItem) {
-                    const usernames = groupedByItem[itemId];
+                // Mettre à jour les statistiques
+                const stats = document.getElementById('updoot-stats');
+                const statNumbers = stats.querySelectorAll('.updoot-stat-number');
+                statNumbers[0].textContent = recommendations.length;
+                statNumbers[1].textContent = Object.keys(groupedByItem).length;
+                statNumbers[2].textContent = uniqueUsers.size;
+
+                // Afficher la grille
+                const grid = document.getElementById('updoot-grid');
+                grid.innerHTML = '';
+                grid.style.display = 'grid';
+
+                // Trier par nombre de recommandations
+                const sortedItems = Object.entries(groupedByItem)
+                    .sort(([, a], [, b]) => b.length - a.length);
+
+                // Créer les cartes
+                for (const [itemId, usernames] of sortedItems) {
                     console.log('Fetching item details for itemId:', itemId);
                     const itemDetails = await fetchItemDetails(itemId);
                     if (!itemDetails) {
@@ -721,17 +1037,7 @@
                     }
 
                     const card = document.createElement('div');
-                    card.className = 'recommendationCard';
-                    card.style.cssText = `
-                        flex: 0 0 200px;
-                        margin: 10px;
-                        background: #333;
-                        border-radius: 8px;
-                        padding: 10px;
-                        color: white;
-                        cursor: pointer;
-                        box-sizing: border-box;
-                    `;
+                    card.className = 'updoot-card';
                     card.addEventListener('click', () => {
                         console.log('Navigating to item:', itemId);
                         window.location.href = `/web/index.html#!/details?id=${itemId}`;
@@ -740,33 +1046,50 @@
 
                     const imageUrl = itemDetails.ImageTags?.Primary
                         ? `${serverUrl}/Items/${itemId}/Images/Primary?api_key=${apiKey}`
+                        : itemDetails.ImageTags?.Backdrop
+                        ? `${serverUrl}/Items/${itemId}/Images/Backdrop?api_key=${apiKey}`
                         : '';
-                    const logoUrl = itemDetails.ImageTags?.Logo
-                        ? `${serverUrl}/Items/${itemId}/Images/Logo?api_key=${apiKey}`
-                        : '';
+
+                    // Déterminer le type de média
+                    const mediaType = itemDetails.Type || 'Media';
+                    const year = itemDetails.ProductionYear || '';
 
                     card.innerHTML = `
-                        ${imageUrl ? `<img src="${imageUrl}" style="width: 100%; border-radius: 4px;" alt="${itemDetails.Name || 'Item'}">` : ''}
-                        ${logoUrl ? `<img src="${logoUrl}" style="max-width: 100%; margin-top: 5px;" alt="Logo">` : ''}
-                        <h3 style="margin: 10px 0;">${itemDetails.Name || 'Unknown'}</h3>
-                        <p style="font-size: 12px;">${itemDetails.Overview || 'No description available'}</p>
-                        <p style="font-size: 12px; font-style: italic;">Recommended by: ${usernames.join(', ')}</p>
+                        ${imageUrl ? `<img src="${imageUrl}" class="updoot-card-image" alt="${itemDetails.Name || 'Item'}">` : '<div class="updoot-card-image" style="display: flex; align-items: center; justify-content: center; font-size: 3rem; color: #667eea;">🎬</div>'}
+                        <div class="updoot-card-content">
+                            <h3 class="updoot-card-title">${itemDetails.Name || 'Unknown'}</h3>
+                            <div class="updoot-card-meta">
+                                <span class="updoot-card-type">${mediaType} ${year ? `(${year})` : ''}</span>
+                                <span class="updoot-vote-count">
+                                    <span class="material-icons" style="font-size: 16px;">thumb_up</span>
+                                    ${usernames.length}
+                                </span>
+                            </div>
+                            ${itemDetails.Overview ? `<p class="updoot-card-overview">${itemDetails.Overview}</p>` : ''}
+                            <div class="updoot-users-list">
+                                <div class="updoot-users-title">Recommandé par :</div>
+                                <div class="updoot-user-chips">
+                                    ${usernames.slice(0, 5).map(username => `
+                                        <div class="updoot-user-chip">
+                                            <span class="updoot-user-avatar">${username.charAt(0).toUpperCase()}</span>
+                                            ${username}
+                                        </div>
+                                    `).join('')}
+                                    ${usernames.length > 5 ? `<div class="updoot-user-chip">+${usernames.length - 5} autres</div>` : ''}
+                                </div>
+                            </div>
+                        </div>
                     `;
 
-                    overlay.appendChild(card);
-                    console.log('Recommendation card added for itemId:', itemId);
+                    grid.appendChild(card);
                 }
 
-                overlay.style.display = 'flex';
-                console.log('Recommendations overlay displayed with', Object.keys(groupedByItem).length, 'items');
+                console.log('Recommendations overlay displayed with', sortedItems.length, 'items');
             } catch (error) {
                 console.error('Error fetching recommendations:', error.message);
-                const errorMessage = document.createElement('p');
-                errorMessage.textContent = 'Failed to load recommendations: ' + error.message;
-                errorMessage.style.cssText = 'width: 100%; text-align: center;';
-                overlay.appendChild(errorMessage);
-                overlay.style.display = 'flex';
-                console.log('Recommendations overlay displayed with error message');
+                document.getElementById('updoot-loading').innerHTML = `
+                    <p style="color: #ef4444;">Erreur lors du chargement des recommandations : ${error.message}</p>
+                `;
             }
         }
 
