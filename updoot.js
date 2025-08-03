@@ -16,7 +16,7 @@
         const serverUrl = server ? server.ManualAddress || server.LocalAddress : 'https://YOURDOMAINNAMEHERE';
         const userId = server ? server.UserId : '';
         const backendUrl = `${window.location.origin}/updoot`;
-        const adminUserIds = ['USERID1', 'USERID2'];
+        const adminUserIds = ['USERID2'];
 
         console.log('Credentials:', { serverUrl, apiKey, userId, backendUrl, isAdmin: adminUserIds.includes(userId) });
 
