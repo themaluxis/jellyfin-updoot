@@ -48,24 +48,34 @@ if you already use one of my mods or have the plugin version of the media bar in
 
 ## installation:
 
-download the files in the repo `updoot.js` and `backendupdoot.py` 
+1.  **Download the files:**
+    Download `backendupdoot.py`, `updoot.js`, `updoot.css`, and `config.py` from this repository.
 
-edit `updoot.js` this needs the obvious values replacing YOURDOMAINHERE and USERID1 and USERID2 replacing in the lines 16 and 19 
+2.  **Configure the backend:**
+    -   Open `config.py` in a text editor.
+    -   Set `JELLYFIN_URL` to your Jellyfin domain name.
+    -   Set `JELLYFIN_API_KEY` to your Jellyfin API key.
+    -   Add the user IDs of your admin users to the `ADMIN_USER_IDS` list.
 
-save `updoot.js` in your jellyfin webroot (check your logs if you are unsure for linux by default it is /usr/share/jellyfin/web/)
+3.  **Install Python dependencies:**
+    ```
+    pip install flask requests
+    ```
 
-add this to your `index.html` in the webroot of your jellyfin install before the `</body>` tag
+4.  **Run the backend service:**
+    ```
+    nohup python3 backendupdoot.py > backendupdoot.log 2>&1 &
+    ```
 
-`<script defer src="updoot.js"></script>`
+5.  **Place the frontend files:**
+    -   Copy `updoot.js` and `updoot.css` to your Jellyfin web root directory (e.g., `/usr/share/jellyfin/web/`).
 
-
-edit the `backendupdoot.py` and replace the obvious parts (near the top in the config section lines 9-12) save it 
-
-install the requirements for python pip `pip install flask requests`
-
-now you can run this as a background service by running this command 
-
-`nohup python3 backendupdoot.py > backendupdoot.log 2>&1 &`
+6.  **Inject the script:**
+    -   Open `index.html` in your Jellyfin web root.
+    -   Add the following line before the closing `</body>` tag:
+        ```html
+        <script defer src="updoot.js"></script>
+        ```
 
 in nginx you simply add the following to your jellyfin config 
 

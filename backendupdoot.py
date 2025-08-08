@@ -3,27 +3,27 @@ import sqlite3
 import os
 import logging
 import requests
+import config
 
 app = Flask(__name__)
-# CONFIGURATION SECTION
-DATABASE = '/config/recommendations.db'  # leave this alone or select a dir you have read write access too
-JELLYFIN_URL = 'https://YOURDOMAINNAMEHERE' # Replace with your domain name
-JELLYFIN_API_KEY = 'JELLYFINAPIKEYHERE'  # Replace with actual Jellyfin API key from the admin pannel api keys generate and copy that key here.
-ADMIN_USER_IDS = ['USERID2']  # Replace with actual admin user IDs that you want to have admin control of the comments and updoots to get these go to the admin pannel and edit that user the userid is going to be in the url for that page of the user.
+
+# Load configuration
+app.config.from_object(config)
 
 logging.basicConfig(
-    level=logging.DEBUG,
+    level=getattr(logging, app.config['LOG_LEVEL']),
     format='%(asctime)s %(levelname)s: %(message)s',
-    filename='./flask-app.log',
-    filemode='a'  
+    filename=app.config['LOG_FILE'],
+    filemode='a'
 )
 logger = logging.getLogger(__name__)
 
 def init_db():
-    logger.debug('Initializing database at %s', DATABASE)
+    db_path = app.config['DATABASE']
+    logger.debug('Initializing database at %s', db_path)
     try:
-        os.makedirs(os.path.dirname(DATABASE), exist_ok=True)
-        with sqlite3.connect(DATABASE) as conn:
+        os.makedirs(os.path.dirname(db_path), exist_ok=True)
+        with sqlite3.connect(db_path) as conn:
             c = conn.cursor()
             c.execute('''CREATE TABLE IF NOT EXISTS recommendations
                          (userId TEXT, itemId TEXT, username TEXT)''')
@@ -33,7 +33,7 @@ def init_db():
                          (globalLimit INTEGER, userId TEXT, perUserLimit INTEGER)''')
             c.execute('INSERT OR IGNORE INTO settings (globalLimit, userId, perUserLimit) VALUES (0, NULL, NULL)')
             conn.commit()
-        logger.info('Database initialized successfully at %s', DATABASE)
+        logger.info('Database initialized successfully at %s', db_path)
     except sqlite3.OperationalError as e:
         logger.error('Failed to initialize database: %s', str(e))
         raise
@@ -41,7 +41,7 @@ def init_db():
 def get_db():
     logger.debug('Connecting to database')
     try:
-        conn = sqlite3.connect(DATABASE)
+        conn = sqlite3.connect(app.config['DATABASE'])
         conn.row_factory = sqlite3.Row
         logger.debug('Database connection established')
         return conn
@@ -52,7 +52,7 @@ def get_db():
 def get_jellyfin_username(userId):
     logger.debug('Fetching username for userId: %s', userId)
     try:
-        url = f'{JELLYFIN_URL}/Users/{userId}?api_key={JELLYFIN_API_KEY}'
+        url = f"{app.config['JELLYFIN_URL']}/Users/{userId}?api_key={app.config['JELLYFIN_API_KEY']}"
         response = requests.get(url)
         if response.ok:
             user_data = response.json()
@@ -204,7 +204,7 @@ def edit_comment(commentId):
             if not result:
                 logger.warning('Comment not found: id=%s', commentId)
                 return jsonify({'error': 'Comment not found'}), 404
-            if result['userId'] != userId and userId not in ADMIN_USER_IDS:
+            if result['userId'] != userId and userId not in app.config['ADMIN_USER_IDS']:
                 logger.warning('Unauthorized edit attempt: userId=%s, commentId=%s', userId, commentId)
                 return jsonify({'error': 'Unauthorized'}), 403
 
@@ -233,7 +233,7 @@ def delete_comment(commentId):
             if not result:
                 logger.warning('Comment not found: id=%s', commentId)
                 return jsonify({'error': 'Comment not found'}), 404
-            if result['userId'] != userId and userId not in ADMIN_USER_IDS:
+            if result['userId'] != userId and userId not in app.config['ADMIN_USER_IDS']:
                 logger.warning('Unauthorized delete attempt: userId=%s, commentId=%s', userId, commentId)
                 return jsonify({'error': 'Unauthorized'}), 403
 
@@ -331,7 +331,6 @@ def save_settings():
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
-    if not os.path.exists(DATABASE):
-        logger.info('Database not found, initializing')
+    with app.app_context():
         init_db()
     app.run(host='0.0.0.0', port=8099)

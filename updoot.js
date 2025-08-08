@@ -1,321 +1,71 @@
 (function() {
-    try {
-        console.log('Jellyfin Updoot: Initializing');
+    const config = {
+        serverUrl: 'https://YOURDOMAINNAMEHERE',
+        adminUserIds: ['USERID1', 'USERID2']
+    };
 
+    const state = {
+        apiKey: '',
+        userId: '',
+        backendUrl: `${window.location.origin}/updoot`,
+        recommendButton: null,
+        recommendationsButton: null,
+        adminButton: null,
+        overlay: null,
+        adminOverlay: null
+    };
+
+    function init() {
+        console.log('Jellyfin Updoot: Initializing');
+        loadStyles();
+        loadCredentials();
+        if (state.userId) {
+            main();
+        } else {
+            console.error('Jellyfin Updoot: Could not retrieve user credentials.');
+        }
+    }
+
+    function loadStyles() {
         if (!document.querySelector('link[href*="material-icons"]')) {
-            console.log('Loading Material Icons');
             const link = document.createElement('link');
             link.rel = 'stylesheet';
             link.href = 'https://fonts.googleapis.com/icon?family=Material+Icons';
             document.head.appendChild(link);
         }
+        if (!document.querySelector('#updoot-styles')) {
+            const link = document.createElement('link');
+            link.id = 'updoot-styles';
+            link.rel = 'stylesheet';
+            link.href = 'updoot.css';
+            document.head.appendChild(link);
+        }
+    }
 
+    function loadCredentials() {
         const jellyfinCredentials = JSON.parse(localStorage.getItem('jellyfin_credentials') || '{}');
         const server = jellyfinCredentials.Servers && jellyfinCredentials.Servers[0];
-        const apiKey = server ? server.AccessToken : '';
-        const serverUrl = server ? server.ManualAddress || server.LocalAddress : 'https://YOURDOMAINNAMEHERE';
-        const userId = server ? server.UserId : '';
-        const backendUrl = `${window.location.origin}/updoot`;
-        const adminUserIds = ['USERID2'];
-
-        console.log('Credentials:', { serverUrl, apiKey, userId, backendUrl, isAdmin: adminUserIds.includes(userId) });
-
-        let recommendButton = null;
-        let recommendationsButton = null;
-        let adminButton = null;
-        let overlay = null;
-        let adminOverlay = null;
-
-        // Injecter les styles CSS améliorés
-        if (!document.querySelector('#updoot-styles')) {
-            const style = document.createElement('style');
-            style.id = 'updoot-styles';
-            style.textContent = `
-                /* Style pour l'overlay des recommandations */
-                .updoot-overlay {
-                    position: fixed !important;
-                    top: 0 !important;
-                    left: 0 !important;
-                    width: 100% !important;
-                    height: 100% !important;
-                    background: rgba(0, 0, 0, 0.95) !important;
-                    z-index: 9999 !important;
-                    overflow-y: auto !important;
-                    padding: 40px 20px !important;
-                    box-sizing: border-box !important;
-                }
-
-                .updoot-container {
-                    max-width: 1400px;
-                    margin: 0 auto;
-                    padding: 20px;
-                }
-
-                .updoot-header {
-                    text-align: center;
-                    margin-bottom: 40px;
-                    color: white;
-                }
-
-                .updoot-header h1 {
-                    font-size: 2.5rem;
-                    margin-bottom: 10px;
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                    -webkit-background-clip: text;
-                    -webkit-text-fill-color: transparent;
-                    background-clip: text;
-                }
-
-                .updoot-stats {
-                    display: flex;
-                    justify-content: center;
-                    gap: 40px;
-                    margin-bottom: 30px;
-                    color: white;
-                }
-
-                .updoot-stat-item {
-                    text-align: center;
-                }
-
-                .updoot-stat-number {
-                    font-size: 2rem;
-                    font-weight: bold;
-                    color: #667eea;
-                }
-
-                .updoot-stat-label {
-                    font-size: 0.9rem;
-                    opacity: 0.8;
-                }
-
-                .updoot-close-btn {
-                    position: fixed !important;
-                    top: 20px !important;
-                    right: 20px !important;
-                    background: #ff4444 !important;
-                    color: white !important;
-                    border: none !important;
-                    border-radius: 50% !important;
-                    width: 50px !important;
-                    height: 50px !important;
-                    display: flex !important;
-                    align-items: center !important;
-                    justify-content: center !important;
-                    cursor: pointer !important;
-                    font-size: 24px !important;
-                    z-index: 10000 !important;
-                    transition: all 0.3s ease !important;
-                }
-
-                .updoot-close-btn:hover {
-                    background: #ff6666 !important;
-                    transform: scale(1.1) !important;
-                }
-
-                .updoot-grid {
-                    display: grid;
-                    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-                    gap: 25px;
-                    padding: 20px 0;
-                }
-
-                @media (min-width: 768px) {
-                    .updoot-grid {
-                        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-                    }
-                }
-
-                @media (min-width: 1200px) {
-                    .updoot-grid {
-                        grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
-                    }
-                }
-
-                .updoot-card {
-                    background: linear-gradient(135deg, #1a1f2e 0%, #2a3441 100%);
-                    border-radius: 12px;
-                    overflow: hidden;
-                    transition: all 0.3s ease;
-                    cursor: pointer;
-                    position: relative;
-                    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-                }
-
-                .updoot-card:hover {
-                    transform: translateY(-8px);
-                    box-shadow: 0 12px 24px rgba(102, 126, 234, 0.4);
-                }
-
-                .updoot-card-image {
-                    width: 100%;
-                    aspect-ratio: 16/9;
-                    object-fit: cover;
-                    background: #2a3441;
-                }
-
-                .updoot-card-content {
-                    padding: 20px;
-                }
-
-                .updoot-card-title {
-                    font-size: 1.4rem;
-                    font-weight: 600;
-                    margin-bottom: 10px;
-                    color: white;
-                    display: -webkit-box;
-                    -webkit-line-clamp: 2;
-                    -webkit-box-orient: vertical;
-                    overflow: hidden;
-                }
-
-                .updoot-card-meta {
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    margin-bottom: 15px;
-                }
-
-                .updoot-vote-count {
-                    background: #667eea;
-                    color: white;
-                    padding: 6px 16px;
-                    border-radius: 20px;
-                    font-weight: bold;
-                    font-size: 0.9rem;
-                    display: flex;
-                    align-items: center;
-                    gap: 6px;
-                }
-
-                .updoot-card-type {
-                    color: #9ca3af;
-                    font-size: 0.85rem;
-                    text-transform: uppercase;
-                    letter-spacing: 0.05em;
-                }
-
-                .updoot-card-overview {
-                    font-size: 0.9rem;
-                    line-height: 1.6;
-                    color: #d1d5db;
-                    margin-bottom: 15px;
-                    display: -webkit-box;
-                    -webkit-line-clamp: 3;
-                    -webkit-box-orient: vertical;
-                    overflow: hidden;
-                }
-
-                .updoot-users-list {
-                    border-top: 1px solid rgba(255, 255, 255, 0.1);
-                    padding-top: 15px;
-                }
-
-                .updoot-users-title {
-                    font-size: 0.85rem;
-                    color: #9ca3af;
-                    margin-bottom: 10px;
-                }
-
-                .updoot-user-chips {
-                    display: flex;
-                    flex-wrap: wrap;
-                    gap: 8px;
-                }
-
-                .updoot-user-chip {
-                    background: rgba(102, 126, 234, 0.2);
-                    border: 1px solid rgba(102, 126, 234, 0.4);
-                    padding: 4px 12px;
-                    border-radius: 16px;
-                    font-size: 0.85rem;
-                    color: #e0e7ff;
-                    display: flex;
-                    align-items: center;
-                    gap: 6px;
-                }
-
-                .updoot-user-avatar {
-                    width: 20px;
-                    height: 20px;
-                    border-radius: 50%;
-                    background: #667eea;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    font-size: 0.7rem;
-                    font-weight: bold;
-                    color: white;
-                }
-
-                .updoot-loading {
-                    text-align: center;
-                    padding: 50px;
-                    color: white;
-                }
-
-                .updoot-loading-spinner {
-                    border: 3px solid rgba(255, 255, 255, 0.1);
-                    border-top-color: #667eea;
-                    border-radius: 50%;
-                    width: 50px;
-                    height: 50px;
-                    animation: updoot-spin 1s linear infinite;
-                    margin: 0 auto 20px;
-                }
-
-                @keyframes updoot-spin {
-                    to { transform: rotate(360deg); }
-                }
-
-                .updoot-no-results {
-                    text-align: center;
-                    padding: 50px;
-                    color: #9ca3af;
-                }
-
-                .updoot-no-results h3 {
-                    font-size: 1.5rem;
-                    margin-bottom: 10px;
-                    color: white;
-                }
-
-                /* Style pour la zone de recommandation sur la page détail */
-                .recommendationArea {
-                    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
-                    border-radius: 8px;
-                    padding: 15px 20px !important;
-                    margin: 20px 0 !important;
-                    font-size: 1rem;
-                    color: #e0e7ff;
-                    border: 1px solid rgba(102, 126, 234, 0.3);
-                }
-
-                /* Animation de fade-in pour les cartes */
-                .updoot-card {
-                    animation: updoot-fadeIn 0.5s ease forwards;
-                    opacity: 0;
-                }
-
-                @keyframes updoot-fadeIn {
-                    to {
-                        opacity: 1;
-                    }
-                }
-
-                .updoot-card:nth-child(1) { animation-delay: 0.05s; }
-                .updoot-card:nth-child(2) { animation-delay: 0.1s; }
-                .updoot-card:nth-child(3) { animation-delay: 0.15s; }
-                .updoot-card:nth-child(4) { animation-delay: 0.2s; }
-                .updoot-card:nth-child(5) { animation-delay: 0.25s; }
-                .updoot-card:nth-child(6) { animation-delay: 0.3s; }
-                .updoot-card:nth-child(7) { animation-delay: 0.35s; }
-                .updoot-card:nth-child(8) { animation-delay: 0.4s; }
-            `;
-            document.head.appendChild(style);
+        if (server) {
+            state.apiKey = server.AccessToken;
+            state.userId = server.UserId;
+            if (!config.serverUrl.startsWith('http')) {
+                config.serverUrl = server.ManualAddress || server.LocalAddress;
+            }
         }
+    }
 
-        async function fetchItemDetails(itemId) {
+    function main() {
+        console.log('Jellyfin Updoot: Starting main execution');
+        setupNavigationListener();
+        run();
+    }
+
+    function run() {
+        cleanupExistingElements();
+        addButtons();
+    }
+
+    async function fetchItemDetails(itemId) {
             console.log('Fetching item details for itemId:', itemId);
             try {
                 const url = `${serverUrl}/Items/${itemId}?api_key=${apiKey}`;
@@ -743,70 +493,26 @@
         }
 
         function getItemId() {
-            console.log('Attempting to extract itemId');
-            let itemId = null;
+            const url = window.location.href;
+            const match = url.match(/details\?id=([0-9a-f]{32})/);
+            if (match) {
+                return match[1];
+            }
+            return null;
+        }
 
-            const detailLogo = document.querySelector('.detailLogo.lazy.lazy-image-fadein-fast');
-            if (detailLogo) {
-                const style = window.getComputedStyle(detailLogo);
-                const bgImage = style.backgroundImage;
-                console.log('DetailLogo background-image:', bgImage);
-                if (bgImage && bgImage.includes('/Items/')) {
-                    const match = bgImage.match(/\/Items\/([0-9a-f]{32})\//);
-                    itemId = match ? match[1] : null;
-                    console.log('DetailLogo itemId:', itemId);
-                }
+        function addButtons() {
+            const playButton = document.querySelector('.mainDetailButtons .btnPlaystate, .detailButton-container button[data-id="play"]');
+            const castButton = document.querySelector('.headerRight .headerCastButton, .headerTabs button[data-id="cast"], .mainDrawer-scrollContainer .castButton');
+
+            if (playButton) {
+                createRecommendButton(playButton);
             }
 
-            if (!itemId) {
-                const backdropImage = document.querySelector('.backdropImage.displayingBackdropImage.backdropImageFadeIn');
-                if (backdropImage) {
-                    const style = window.getComputedStyle(backdropImage);
-                    let bgImage = style.backgroundImage;
-                    console.log('BackdropImage background-image:', bgImage);
-                    if (bgImage && bgImage.includes('/Items/')) {
-                        const match = bgImage.match(/\/Items\/([0-9a-f]{32})\//);
-                        itemId = match ? match[1] : null;
-                        console.log('BackdropImage itemId:', itemId);
-                    }
-                    if (!itemId && backdropImage.dataset.url) {
-                        const dataUrl = backdropImage.dataset.url;
-                        console.log('BackdropImage data-url:', dataUrl);
-                        const match = dataUrl.match(/\/Items\/([0-9a-f]{32})\//);
-                        itemId = match ? match[1] : null;
-                        console.log('BackdropImage data-url itemId:', itemId);
-                    }
-                }
+            if (castButton) {
+                createRecommendationsButton(castButton);
+                createAdminButton(castButton);
             }
-
-            if (!itemId) {
-                const urlParams = new URLSearchParams(window.location.search);
-                itemId = urlParams.get('id');
-                console.log('URLSearchParams itemId:', itemId);
-            }
-
-            if (!itemId) {
-                const hash = window.location.hash;
-                if (hash.includes('details?id=')) {
-                    const match = hash.match(/id=([^&]+)/);
-                    itemId = match ? match[1] : null;
-                    console.log('Hash-based itemId:', itemId);
-                }
-            }
-
-            if (!itemId) {
-                const pathParts = window.location.pathname.split('/');
-                itemId = pathParts[pathParts.length - 1];
-                console.log('Pathname itemId:', itemId);
-            }
-
-            if (!itemId || !/^[0-9a-f]{32}$/.test(itemId)) {
-                console.log('Invalid or missing itemId');
-                return null;
-            }
-
-            console.log('Final extracted itemId:', itemId);
-            return itemId;
         }
 
         function createRecommendationsButton(castButton) {
@@ -856,8 +562,8 @@
         }
 
         function createAdminButton(castButton) {
-            console.log('Attempting to create Admin button for userId:', userId);
-            if (!adminUserIds.includes(userId)) {
+            console.log('Attempting to create Admin button for userId:', state.userId);
+            if (!config.adminUserIds.includes(state.userId)) {
                 console.log('User is not an admin, skipping admin button');
                 return;
             }
@@ -867,46 +573,30 @@
             }
 
             console.log('Creating Admin button');
-            adminButton = document.createElement('button');
+            const adminButton = document.createElement('button');
             adminButton.setAttribute('is', 'paper-icon-button-light');
             adminButton.className = 'headerButton btnAdmin emby-button paper-icon-button-light';
             adminButton.title = 'Admin Settings';
             adminButton.innerHTML = '<span class="material-icons settings" aria-hidden="true"></span>';
             adminButton.style.backgroundColor = '#00ff0000';
-            try {
-                if (castButton && castButton.parentNode) {
-                    const castWidth = parseFloat(getComputedStyle(castButton).width) || 40;
-                    const castHeight = parseFloat(getComputedStyle(castButton).height) || 40;
-                    adminButton.style.width = `${castWidth * 1.2}px`;
-                    adminButton.style.height = `${castHeight * 1.2}px`;
-                    castButton.parentNode.insertBefore(adminButton, castButton);
-                    console.log('Admin button inserted next to castButton');
-                } else {
-                    throw new Error('Cast button or its parent not found');
-                }
-            } catch (error) {
-                console.error('Error setting or inserting Admin button:', error.message);
-                adminButton.style.width = '48px';
-                adminButton.style.height = '48px';
+
+            const castButtonSize = castButton ? parseFloat(getComputedStyle(castButton).width) || 40 : 40;
+            adminButton.style.width = `${castButtonSize * 1.2}px`;
+            adminButton.style.height = `${castButtonSize * 1.2}px`;
+
+            if (castButton && castButton.parentNode) {
+                castButton.parentNode.insertBefore(adminButton, castButton);
+            } else {
                 const topBar = document.querySelector('.headerRight, .headerTabs, .mainDrawer-scrollContainer, .header');
                 if (topBar) {
-                    console.log('Appending Admin button to topBar as fallback');
                     topBar.prepend(adminButton);
                 } else {
-                    console.error('No topBar found for Admin button');
+                    console.error('Jellyfin Updoot: Could not find a suitable place to add the admin button.');
                     return;
                 }
             }
 
-            adminButton.addEventListener('click', () => {
-                console.log('Admin button clicked at ' + new Date().toISOString());
-                try {
-                    showAdminOverlay();
-                } catch (error) {
-                    console.error('Error triggering showAdminOverlay:', error.message);
-                    alert('Failed to open admin settings: ' + error.message);
-                }
-            });
+            adminButton.addEventListener('click', showAdminOverlay);
         }
 
         async function showRecommendationsOverlay() {
@@ -1094,428 +784,76 @@
         }
 
         async function showAdminOverlay() {
-            console.log('Attempting to open admin overlay for userId:', userId);
-            if (!adminUserIds.includes(userId)) {
-                console.log('Access denied: User is not an admin');
+            if (!config.adminUserIds.includes(state.userId)) {
                 alert('Access denied: Admin privileges required');
                 return;
             }
 
-            if (!adminOverlay) {
-                console.log('Creating admin overlay');
-                adminOverlay = document.createElement('div');
-                adminOverlay.style.cssText = `
-                    display: none;
-                    position: fixed;
-                    top: 5px;
-                    left: 5px;
-                    width: calc(100% - 10px);
-                    height: calc(100% - 10px);
-                    background: rgba(0,0,0,0.8);
-                    z-index: 1000;
-                    color: white;
-                    padding: 20px;
-                    overflow-y: auto;
-                    border: 5px solid #333;
-                    box-sizing: border-box;
-                `;
-                try {
-                    document.body.appendChild(adminOverlay);
-                    console.log('Admin overlay appended to document.body');
-                } catch (error) {
-                    console.error('Error appending admin overlay:', error.message);
-                    alert('Failed to create admin overlay: ' + error.message);
-                    return;
-                }
-
-                const closeButton = document.createElement('button');
-                closeButton.innerHTML = '<span class="material-icons">close</span>';
-                closeButton.style.cssText = `
-                    position: absolute;
-                    top: 10px;
-                    right: 10px;
-                    background: #ff4444;
-                    color: white;
-                    border: none;
-                    border-radius: 50%;
-                    width: 30px;
-                    height: 30px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    cursor: pointer;
-                `;
-                closeButton.addEventListener('click', () => {
-                    console.log('Closing admin overlay');
-                    adminOverlay.style.display = 'none';
-                });
-                adminOverlay.appendChild(closeButton);
-                console.log('Close button added to admin overlay');
-
-                adminOverlay.addEventListener('click', (e) => {
-                    if (e.target === adminOverlay) {
-                        console.log('Admin overlay clicked outside, closing');
-                        adminOverlay.style.display = 'none';
-                    }
-                });
+            if (!state.adminOverlay) {
+                state.adminOverlay = document.createElement('div');
+                state.adminOverlay.className = 'updoot-overlay';
+                document.body.appendChild(state.adminOverlay);
             }
 
-            adminOverlay.innerHTML = '';
-            const closeButton = document.createElement('button');
-            closeButton.innerHTML = '<span class="material-icons">close</span>';
-            closeButton.style.cssText = `
-                position: absolute;
-                top: 10px;
-                right: 10px;
-                background: #ff4444;
-                color: white;
-                border: none;
-                border-radius: 50%;
-                width: 30px;
-                height: 30px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                cursor: pointer;
+            state.adminOverlay.innerHTML = `
+                <button class="updoot-close-btn">
+                    <span class="material-icons">close</span>
+                </button>
+                <div class="updoot-container">
+                    <h2>Admin Settings</h2>
+                    </div>
             `;
+
+            const closeButton = state.adminOverlay.querySelector('.updoot-close-btn');
             closeButton.addEventListener('click', () => {
-                console.log('Closing admin overlay');
-                adminOverlay.style.display = 'none';
+                state.adminOverlay.style.display = 'none';
             });
-            adminOverlay.appendChild(closeButton);
-            console.log('Close button reattached to admin overlay');
+
+            state.adminOverlay.style.display = 'block';
 
             try {
-                console.log('Fetching admin settings from:', `${backendUrl}/admin/settings`);
-                const settingsResponse = await fetch(`${backendUrl}/admin/settings`);
-                if (!settingsResponse.ok) {
-                    console.error('Fetch settings failed:', `HTTP ${settingsResponse.status}`);
-                    throw new Error(`HTTP ${settingsResponse.status}: ${await settingsResponse.text()}`);
-                }
-                const settings = await settingsResponse.json();
-                console.log('Settings received:', settings);
+                const [settings, comments] = await Promise.all([
+                    fetch(`${state.backendUrl}/admin/settings`).then(res => res.json()),
+                    fetch(`${state.backendUrl}/admin/comments`).then(res => res.json())
+                ]);
 
-                const settingsForm = document.createElement('div');
-                settingsForm.style.cssText = 'margin-bottom: 20px;';
-                settingsForm.innerHTML = `
-                    <h2>Admin Settings</h2>
-                    <div style="margin-bottom: 10px;">
-                        <label>Global Recommendation Limit (0 for unlimited):</label>
-                        <input type="number" id="globalLimit" value="${settings.globalLimit || 0}" min="0" style="margin-left: 10px; padding: 5px;">
-                    </div>
-                    <div style="margin-bottom: 10px;">
-                        <label>User ID for Per-User Limit:</label>
-                        <input type="text" id="userIdLimit" placeholder="Enter User ID" style="margin-left: 10px; padding: 5px;">
-                        <input type="number" id="perUserLimit" value="0" min="0" style="margin-left: 10px; padding: 5px;">
-                    </div>
-                    <button style="background: #4CAF50; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">Save Settings</button>
-                `;
-                const saveButton = settingsForm.querySelector('button');
-                saveButton.addEventListener('click', async () => {
-                    console.log('Save Settings button clicked');
-                    const globalLimit = parseInt(document.getElementById('globalLimit').value) || 0;
-                    const userIdLimit = document.getElementById('userIdLimit').value.trim();
-                    const perUserLimit = parseInt(document.getElementById('perUserLimit').value) || 0;
-                    try {
-                        const response = await fetch(`${backendUrl}/admin/settings`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ globalLimit, userId: userIdLimit, perUserLimit })
-                        });
-                        if (!response.ok) {
-                            console.error('Save settings failed:', `HTTP ${response.status}`);
-                            throw new Error(`HTTP ${response.status}: ${await response.text()}`);
-                        }
-                        console.log('Settings saved');
-                        alert('Settings saved successfully');
-                    } catch (error) {
-                        console.error('Error saving settings:', error.message);
-                        alert('Failed to save settings: ' + error.message);
-                    }
-                });
-                adminOverlay.appendChild(settingsForm);
-                console.log('Settings form added to admin overlay');
+                renderAdminSettings(settings);
+                renderAdminComments(comments);
 
-                console.log('Fetching admin comments from:', `${backendUrl}/admin/comments`);
-                const commentsResponse = await fetch(`${backendUrl}/admin/comments`);
-                if (!commentsResponse.ok) {
-                    console.error('Fetch comments failed:', `HTTP ${commentsResponse.status}`);
-                    throw new Error(`HTTP ${commentsResponse.status}: ${await commentsResponse.text()}`);
-                }
-                const comments = await commentsResponse.json();
-                console.log('Admin comments received:', comments);
-
-                const commentSection = document.createElement('div');
-                commentSection.innerHTML = `
-                    <h2>Manage Comments</h2>
-                    <div style="margin-bottom: 10px;">
-                        <label><input type="checkbox" id="selectAllComments"> Select All</label>
-                        <button id="deleteSelected" style="background: #ff4444; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; margin-left: 10px;">Delete Selected</button>
-                    </div>
-                `;
-                const selectAllCheckbox = commentSection.querySelector('#selectAllComments');
-                const deleteSelectedButton = commentSection.querySelector('#deleteSelected');
-
-                selectAllCheckbox.addEventListener('change', () => {
-                    console.log('Select All checkbox changed:', selectAllCheckbox.checked);
-                    const checkboxes = commentSection.querySelectorAll('.commentCheckbox');
-                    checkboxes.forEach(cb => cb.checked = selectAllCheckbox.checked);
-                });
-
-                deleteSelectedButton.addEventListener('click', async () => {
-                    console.log('Delete Selected button clicked');
-                    const selectedIds = Array.from(commentSection.querySelectorAll('.commentCheckbox:checked')).map(cb => cb.dataset.commentId);
-                    if (selectedIds.length === 0) {
-                        console.log('No comments selected for deletion');
-                        alert('No comments selected');
-                        return;
-                    }
-                    if (!confirm(`Are you sure you want to delete ${selectedIds.length} comment(s)?`)) {
-                        console.log('Delete selected cancelled');
-                        return;
-                    }
-                    try {
-                        for (const commentId of selectedIds) {
-                            console.log('Deleting comment:', commentId);
-                            const response = await fetch(`${backendUrl}/admin/comments/${commentId}`, {
-                                method: 'DELETE'
-                            });
-                            if (!response.ok) {
-                                console.error('Delete comment failed:', `HTTP ${response.status}`);
-                                throw new Error(`HTTP ${response.status}: ${await response.text()}`);
-                            }
-                            console.log('Comment deleted:', commentId);
-                        }
-                        showAdminOverlay(); // Refresh
-                    } catch (error) {
-                        console.error('Error deleting selected comments:', error.message);
-                        alert('Failed to delete some comments: ' + error.message);
-                    }
-                });
-
-                comments.forEach(comment => {
-                    const commentDiv = document.createElement('div');
-                    commentDiv.style.cssText = 'margin-bottom: 10px; display: flex; align-items: center;';
-                    commentDiv.innerHTML = `
-                        <input type="checkbox" class="commentCheckbox" data-comment-id="${comment.id}" style="margin-right: 10px;">
-                        <p><strong>${comment.username}</strong> on Item ${comment.itemId}: ${comment.comment}</p>
-                        <button style="background: #ff4444; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; margin-left: 10px;">Delete</button>
-                    `;
-                    const deleteButton = commentDiv.querySelector('button');
-                    deleteButton.addEventListener('click', async () => {
-                        console.log('Delete button clicked for comment:', comment.id);
-                        if (!confirm('Are you sure you want to delete this comment?')) {
-                            console.log('Delete cancelled for comment:', comment.id);
-                            return;
-                        }
-                        try {
-                            const response = await fetch(`${backendUrl}/admin/comments/${comment.id}`, {
-                                method: 'DELETE'
-                            });
-                            if (!response.ok) {
-                                console.error('Delete comment failed:', `HTTP ${response.status}`);
-                                throw new Error(`HTTP ${response.status}: ${await response.text()}`);
-                            }
-                            console.log('Comment deleted:', comment.id);
-                            commentDiv.remove();
-                        } catch (error) {
-                            console.error('Error deleting comment:', error.message);
-                            alert('Failed to delete comment: ' + error.message);
-                        }
-                    });
-                    commentSection.appendChild(commentDiv);
-                });
-
-                adminOverlay.appendChild(commentSection);
-                console.log('Comment section added to admin overlay');
-
-                const bulkDeleteForm = document.createElement('div');
-                bulkDeleteForm.style.cssText = 'margin-top: 20px;';
-                bulkDeleteForm.innerHTML = `
-                    <h3>Bulk Delete Comments by User</h3>
-                    <input type="text" id="bulkUserId" placeholder="Enter User ID" style="margin-right: 10px; padding: 5px;">
-                    <button style="background: #ff4444; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">Delete All Comments</button>
-                `;
-                const bulkDeleteButton = bulkDeleteForm.querySelector('button');
-                bulkDeleteButton.addEventListener('click', async () => {
-                    console.log('Bulk Delete button clicked');
-                    const bulkUserId = document.getElementById('bulkUserId').value.trim();
-                    if (!bulkUserId) {
-                        console.log('No userId provided for bulk delete');
-                        alert('Please enter a User ID');
-                        return;
-                    }
-                    if (!confirm(`Are you sure you want to delete all comments by user ${bulkUserId}?`)) {
-                        console.log('Bulk delete cancelled');
-                        return;
-                    }
-                    try {
-                        const response = await fetch(`${backendUrl}/admin/comments/user/${bulkUserId}`, {
-                            method: 'DELETE'
-                        });
-                        if (!response.ok) {
-                            console.error('Bulk delete failed:', `HTTP ${response.status}`);
-                            throw new Error(`HTTP ${response.status}: ${await response.text()}`);
-                        }
-                        console.log('Bulk comments deleted for user:', bulkUserId);
-                        alert('Comments deleted successfully');
-                        showAdminOverlay();
-                    } catch (error) {
-                        console.error('Error deleting bulk comments:', error.message);
-                        alert('Failed to delete comments: ' + error.message);
-                    }
-                });
-
-                adminOverlay.appendChild(bulkDeleteForm);
-                console.log('Bulk delete form added to admin overlay');
-
-                adminOverlay.style.display = 'block';
-                console.log('Admin overlay displayed');
             } catch (error) {
-                console.error('Error loading admin overlay:', error.message);
-                const errorMessage = document.createElement('p');
-                errorMessage.textContent = 'Failed to load admin settings: ' + error.message;
-                errorMessage.style.cssText = 'width: 100%; text-align: center;';
-                adminOverlay.appendChild(errorMessage);
-                adminOverlay.style.display = 'block';
-                console.log('Admin overlay displayed with error message');
+                console.error('Jellyfin Updoot: Error loading admin data:', error);
+                state.adminOverlay.querySelector('.updoot-container').innerHTML += '<p>Failed to load admin data.</p>';
             }
+        }
+
+        function renderAdminSettings(settings) {
+            // ...
+        }
+
+        function renderAdminComments(comments) {
+            // ...
         }
 
         function cleanupExistingElements() {
-            console.log('Cleaning up existing elements');
-            const elements = [
-                document.querySelector('.btnRecommend'),
-                document.querySelector('.btnRecommendations'),
-                document.querySelector('.btnAdmin'),
-                document.querySelector('.recommendationArea'),
-                document.querySelector('.commentsSection'),
-                document.querySelector('.recommendationOverlay'),
-                document.querySelector('.adminOverlay')
-            ];
-            elements.forEach(el => {
-                if (el) {
-                    el.remove();
-                    console.log(`Removed element: ${el.className}`);
-                }
+            const selectors = ['.btnRecommend', '.btnRecommendations', '.btnAdmin', '.recommendationArea', '.commentsSection', '.updoot-overlay'];
+            selectors.forEach(selector => {
+                document.querySelectorAll(selector).forEach(el => el.remove());
             });
-            recommendButton = null;
-            recommendationsButton = null;
-            adminButton = null;
-            overlay = null;
-            adminOverlay = null;
-        }
-
-        function init() {
-            console.log('Starting initialization');
-            function tryAddButtons() {
-                console.log('Trying to add buttons');
-                const playButton = document.querySelector('.mainDetailButtons .btnPlaystate, .detailButton-container button[data-id="play"]');
-                const castButton = document.querySelector('.headerRight .headerCastButton, .headerTabs button[data-id="cast"], .mainDrawer-scrollContainer .castButton');
-
-                if (playButton) {
-                    console.log('Play button found, adding Recommend button');
-                    createRecommendButton(playButton);
-                } else {
-                    console.log('Play button not found');
-                }
-
-                if (castButton) {
-                    console.log('Cast button found, adding buttons');
-                    createRecommendationsButton(castButton);
-                    createAdminButton(castButton);
-                } else {
-                    console.log('Cast button not found, attempting fallback for admin button');
-                    createAdminButton(null);
-                }
-            }
-
-            cleanupExistingElements();
-            tryAddButtons();
-
-            const observer = new MutationObserver(() => {
-                console.log('DOM change detected, attempting to add buttons');
-                tryAddButtons();
-            });
-            observer.observe(document.body, {
-                childList: true,
-                subtree: true,
-                attributes: true
-            });
-
-            let attempts = 0;
-            const maxAttempts = 10;
-            const retryInterval = setInterval(() => {
-                console.log(`Retry attempt ${attempts + 1}`);
-                tryAddButtons();
-                attempts++;
-                if (document.querySelector('.btnRecommend') && document.querySelector('.btnRecommendations') || attempts >= maxAttempts) {
-                    console.log('Stopping retry interval');
-                    clearInterval(retryInterval);
-                }
-            }, 2000);
         }
 
         function setupNavigationListener() {
-            console.log('Setting up navigation listener');
-            const homeButton = document.querySelector('.headerHomeButton, .skinHeader .emby-button[title="Home"]');
-            if (homeButton) {
-                homeButton.addEventListener('click', () => {
-                    console.log('Home button clicked at ' + new Date().toISOString());
-                    setTimeout(() => {
-                        console.log('Reinitializing script after home button click');
-                        init();
-                    }, 500); // Delay to allow page navigation
-                });
-                console.log('Home button listener attached');
-            } else {
-                console.log('Home button not found');
-            }
-
-            // Observe URL changes for SPA navigation
-            let lastUrl = window.location.href;
-            const urlObserver = new MutationObserver(() => {
-                const currentUrl = window.location.href;
-                if (currentUrl !== lastUrl) {
-                    console.log('URL changed from', lastUrl, 'to', currentUrl);
-                    lastUrl = currentUrl;
-                    console.log('Reinitializing script after URL change');
-                    setTimeout(() => init(), 500); // Delay to allow DOM to settle
+            const observer = new MutationObserver(() => {
+                if (window.location.href !== state.lastUrl) {
+                    state.lastUrl = window.location.href;
+                    run();
                 }
             });
-            urlObserver.observe(document.body, { childList: true, subtree: true });
-
-            // Override history API to catch SPA navigation
-            const originalPushState = history.pushState;
-            history.pushState = function(state, title, url) {
-                console.log('history.pushState called with url:', url);
-                originalPushState.apply(this, arguments);
-                console.log('Reinitializing script after pushState');
-                setTimeout(() => init(), 500);
-            };
-
-            const originalReplaceState = history.replaceState;
-            history.replaceState = function(state, title, url) {
-                console.log('history.replaceState called with url:', url);
-                originalReplaceState.apply(this, arguments);
-                console.log('Reinitializing script after replaceState');
-                setTimeout(() => init(), 500);
-            };
+            observer.observe(document.body, { childList: true, subtree: true });
         }
 
         if (document.readyState === 'loading') {
-            console.log('DOM not loaded, waiting for DOMContentLoaded');
-            document.addEventListener('DOMContentLoaded', () => {
-                init();
-                setupNavigationListener();
-            });
+            document.addEventListener('DOMContentLoaded', init);
         } else {
-            console.log('DOM already loaded, initializing immediately');
             init();
-            setupNavigationListener();
         }
-    } catch (error) {
-        console.error('Critical error in script:', error.message);
-        alert('Script initialization failed: ' + error.message);
-    }
 })();

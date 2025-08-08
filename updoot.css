@@ -1,0 +1,305 @@
+/* Style for the recommendations overlay */
+.updoot-overlay {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: rgba(0, 0, 0, 0.95) !important;
+    z-index: 9999 !important;
+    overflow-y: auto !important;
+    padding: 40px 20px !important;
+    box-sizing: border-box !important;
+}
+
+.updoot-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.updoot-header {
+    text-align: center;
+    margin-bottom: 40px;
+    color: white;
+}
+
+.updoot-header h1 {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.updoot-stats {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    margin-bottom: 30px;
+    color: white;
+}
+
+.updoot-stat-item {
+    text-align: center;
+}
+
+.updoot-stat-number {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #667eea;
+}
+
+.updoot-stat-label {
+    font-size: 0.9rem;
+    opacity: 0.8;
+}
+
+.updoot-close-btn {
+    position: fixed !important;
+    top: 20px !important;
+    right: 20px !important;
+    background: #ff4444 !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 50% !important;
+    width: 50px !important;
+    height: 50px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    font-size: 24px !important;
+    z-index: 10000 !important;
+    transition: all 0.3s ease !important;
+}
+
+.updoot-close-btn:hover {
+    background: #ff6666 !important;
+    transform: scale(1.1) !important;
+}
+
+.updoot-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 25px;
+    padding: 20px 0;
+}
+
+@media (min-width: 768px) {
+    .updoot-grid {
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    }
+}
+
+@media (min-width: 1200px) {
+    .updoot-grid {
+        grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+    }
+}
+
+.updoot-card {
+    background: linear-gradient(135deg, #1a1f2e 0%, #2a3441 100%);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    position: relative;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+.updoot-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 24px rgba(102, 126, 234, 0.4);
+}
+
+.updoot-card-image {
+    width: 100%;
+    aspect-ratio: 16/9;
+    object-fit: cover;
+    background: #2a3441;
+}
+
+.updoot-card-content {
+    padding: 20px;
+}
+
+.updoot-card-title {
+    font-size: 1.4rem;
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: white;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.updoot-card-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.updoot-vote-count {
+    background: #667eea;
+    color: white;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-weight: bold;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.updoot-card-type {
+    color: #9ca3af;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.updoot-card-overview {
+    font-size: 0.9rem;
+    line-height: 1.6;
+    color: #d1d5db;
+    margin-bottom: 15px;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.updoot-users-list {
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding-top: 15px;
+}
+
+.updoot-users-title {
+    font-size: 0.85rem;
+    color: #9ca3af;
+    margin-bottom: 10px;
+}
+
+.updoot-user-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.updoot-user-chip {
+    background: rgba(102, 126, 234, 0.2);
+    border: 1px solid rgba(102, 126, 234, 0.4);
+    padding: 4px 12px;
+    border-radius: 16px;
+    font-size: 0.85rem;
+    color: #e0e7ff;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.updoot-user-avatar {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #667eea;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: bold;
+    color: white;
+}
+
+.updoot-loading {
+    text-align: center;
+    padding: 50px;
+    color: white;
+}
+
+.updoot-loading-spinner {
+    border: 3px solid rgba(255, 255, 255, 0.1);
+    border-top-color: #667eea;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: updoot-spin 1s linear infinite;
+    margin: 0 auto 20px;
+}
+
+@keyframes updoot-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.updoot-no-results {
+    text-align: center;
+    padding: 50px;
+    color: #9ca3af;
+}
+
+.updoot-no-results h3 {
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+    color: white;
+}
+
+/* Style for the recommendation area on the detail page */
+.recommendationArea {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+    border-radius: 8px;
+    padding: 15px 20px !important;
+    margin: 20px 0 !important;
+    font-size: 1rem;
+    color: #e0e7ff;
+    border: 1px solid rgba(102, 126, 234, 0.3);
+}
+
+/* Fade-in animation for cards */
+.updoot-card {
+    animation: updoot-fadeIn 0.5s ease forwards;
+    opacity: 0;
+}
+
+@keyframes updoot-fadeIn {
+    to {
+        opacity: 1;
+    }
+}
+
+.updoot-card:nth-child(1) {
+    animation-delay: 0.05s;
+}
+
+.updoot-card:nth-child(2) {
+    animation-delay: 0.1s;
+}
+
+.updoot-card:nth-child(3) {
+    animation-delay: 0.15s;
+}
+
+.updoot-card:nth-child(4) {
+    animation-delay: 0.2s;
+}
+
+.updoot-card:nth-child(5) {
+    animation-delay: 0.25s;
+}
+
+.updoot-card:nth-child(6) {
+    animation-delay: 0.3s;
+}
+
+.updoot-card:nth-child(7) {
+    animation-delay: 0.35s;
+}
+
+.updoot-card:nth-child(8) {
+    animation-delay: 0.4s;
+}
